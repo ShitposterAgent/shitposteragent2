@@ -1,0 +1,9 @@
+pytesseract>=0.3.8
+Pillow>=8.0.0
+pyautogui>=0.9.53
+click>=8.0.0
+vosk>=0.3.42
+flite
+ollama>=0.1.0
+schedule>=1.1.0
+programmingexcuses
