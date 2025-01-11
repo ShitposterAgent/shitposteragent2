@@ -3,3 +3,4 @@ playwright
 vosk
 flite
 ollama
+pytest-playwright
