@@ -58,11 +58,24 @@ def main():
         # Implement status checking
         print("Shitposter Agent is running.")
     elif args.command == 'check':
+        # Expand user path if present
+        config_file_path = config['paths']['config_file']
+        config_file_path = os.path.expanduser(config_file_path)
+        try:
+            with open(config_file_path) as config_file:
+                check_config = json.load(config_file)
+        except FileNotFoundError:
+            print(f"Configuration file not found at {config_file_path}. Please provide a valid config file.")
+            return
+        except json.JSONDecodeError as e:
+            print(f"Error parsing the configuration file: {e}")
+            return
+
         social_media = SocialMediaAutomator(
-            social_media_config=config['social_media'],
-            ollama_config=config['ollama'],
-            tesseract_config=config['tesseract'],
-            playwright_config=config['playwright']
+            social_media_config=check_config['social_media'],
+            ollama_config=check_config['ollama'],
+            tesseract_config=check_config['tesseract'],
+            playwright_config=check_config['playwright']
         )
         social_media.check_platforms(args.platforms)
     else:

@@ -58,8 +58,13 @@ class SocialMediaAutomator:
 
             context = self.browser.new_context()
             page = context.new_page()
-            page.goto(config['url'])
-            page.wait_for_load_state('networkidle')
+            try:
+                page.goto(config['url'], timeout=60000)  # Increased timeout to 60 seconds
+            except Exception as e:
+                print(f"Error navigating to {platform}: {e}")
+                page.close()
+                context.close()
+                continue
 
             # Take screenshot
             screenshot_path = config['screenshot_path']
