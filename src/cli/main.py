@@ -5,10 +5,15 @@ from nlp.nlp_module import NLP
 from automation.social_media import SocialMediaAutomator
 import json
 import subprocess
+import os
 
 def main():
     parser = argparse.ArgumentParser(description="Shitposter Agent CLI")
     subparsers = parser.add_subparsers(dest='command', help='Subcommands')
+
+    # Global optional argument for config
+    parser.add_argument('--config', type=str, default=os.path.expanduser('~/shitposter.json'),
+                        help='Path to the configuration file')
 
     # Subcommand: automate
     automate_parser = subparsers.add_parser('automate', help='Perform automation tasks')
@@ -25,10 +30,19 @@ def main():
 
     args = parser.parse_args()
 
-    if args.command == 'automate':
-        with open('config.json') as config_file:
+    # Load configuration
+    config_path = args.config
+    try:
+        with open(config_path) as config_file:
             config = json.load(config_file)
-        
+    except FileNotFoundError:
+        print(f"Configuration file not found at {config_path}. Please provide a valid config file.")
+        return
+    except json.JSONDecodeError as e:
+        print(f"Error parsing the configuration file: {e}")
+        return
+
+    if args.command == 'automate':
         automation = Automation(config['automation'])
         vision = Vision(config['vision'])
         nlp = NLP(config['nlp'])
@@ -44,9 +58,6 @@ def main():
         # Implement status checking
         print("Shitposter Agent is running.")
     elif args.command == 'check':
-        with open(config['paths']['config_file']) as config_file:
-            config = json.load(config_file)
-        
         social_media = SocialMediaAutomator(
             social_media_config=config['social_media'],
             ollama_config=config['ollama'],

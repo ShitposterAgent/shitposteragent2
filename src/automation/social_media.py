@@ -13,7 +13,6 @@ class SocialMediaAutomator:
         self.browser = self.connect_browser()
 
     def connect_browser(self):
-        # Assuming CDP endpoints are the same for all platforms; adjust if necessary
         first_platform = next(iter(self.social_media_config.values()))
         if first_platform.get('cdp_endpoint'):
             browser = self.playwright.chromium.connect_over_cdp(first_platform['cdp_endpoint'])
