@@ -147,3 +147,5 @@ if __name__ == "__main__":
     #     python -m shitposteragent2.skeleton 42
     #
     run()
+
+# Consider removing this file if not needed
