@@ -3,17 +3,17 @@
         "whatsapp": {
             "url": "https://web.whatsapp.com",
             "cdp_endpoint": "http://localhost:9222",
-            "screenshot_path": "/home/nathfavour/Documents/code/shitposteragent2/screenshots/whatsapp_screenshot.png"
+            "screenshot_dir": "/home/nathfavour/Pictures/Screenshots"
         },
         "instagram": {
             "url": "https://www.instagram.com",
             "cdp_endpoint": "http://localhost:9222",
-            "screenshot_path": "/home/nathfavour/Documents/code/shitposteragent2/screenshots/instagram_screenshot.png"
+            "screenshot_dir": "/home/nathfavour/Pictures/Screenshots"
         },
         "twitter": {
             "url": "https://twitter.com",
             "cdp_endpoint": "http://localhost:9222",
-            "screenshot_path": "/home/nathfavour/Documents/code/shitposteragent2/screenshots/twitter_screenshot.png"
+            "screenshot_dir": "/home/nathfavour/Pictures/Screenshots"
         }
     },
     "ollama": {

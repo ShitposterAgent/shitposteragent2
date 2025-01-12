@@ -3,6 +3,7 @@ import subprocess
 from ollama import Client
 import json
 import os  # Added import
+import uuid  # Added import
 
 class SocialMediaAutomator:
     def __init__(self, social_media_config, ollama_config, tesseract_config, playwright_config):
@@ -68,9 +69,12 @@ class SocialMediaAutomator:
                 continue
 
             # Ensure directory exists
-            screenshot_path = config['screenshot_path']
-            screenshot_dir = os.path.dirname(screenshot_path)
+            screenshot_dir = config['screenshot_dir']
             os.makedirs(screenshot_dir, exist_ok=True)  # Create directories if they don't exist
+
+            # Generate random filename
+            random_filename = f"{platform}_screenshot_{uuid.uuid4().hex}.png"
+            screenshot_path = os.path.join(screenshot_dir, random_filename)
 
             # Take screenshot
             page.screenshot(path=screenshot_path)
