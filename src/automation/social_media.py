@@ -13,11 +13,12 @@ class SocialMediaAutomator:
         self.playwright_config = playwright_config
         self.playwright = sync_playwright().start()
         self.browser = self.connect_browser()
+        self.context = self.browser.new_context()  # Initialize a single browser context
 
     def connect_browser(self):
         first_platform = next(iter(self.social_media_config.values()))
-        if first_platform.get('cdp_endpoint'):
-            browser = self.playwright.chromium.connect_over_cdp(first_platform['cdp_endpoint'])
+        if (cdp_endpoint := first_platform.get('cdp_endpoint')):
+            browser = self.playwright.chromium.connect_over_cdp(cdp_endpoint)
         else:
             browser = self.playwright.chromium.launch(headless=self.playwright_config.get('headless', False))
         return browser
@@ -34,15 +35,13 @@ class SocialMediaAutomator:
         context.close()
 
     def post_update(self, content):
-        context = self.browser.new_context()
-        page = context.new_page()
+        page = self.context.new_page()  # Open a new tab in the existing context
         # ...existing code...
         page.goto('https://socialmedia.com/post')
         page.fill('textarea[name="post"]', content)
         page.click('button[type="submit"]')
         # ...existing code...
         page.close()
-        context.close()
 
     def check_platforms(self, platforms):
         client = Client(
@@ -58,14 +57,12 @@ class SocialMediaAutomator:
                 print(f"Configuration for {platform} not found.")
                 continue
 
-            context = self.browser.new_context()
-            page = context.new_page()
+            page = self.context.new_page()  # Open a new tab in the existing context
             try:
                 page.goto(config['url'], timeout=60000)  # Increased timeout to 60 seconds
             except Exception as e:
                 print(f"Error navigating to {platform}: {e}")
                 page.close()
-                context.close()
                 continue
 
             # Ensure directory exists
@@ -108,9 +105,9 @@ class SocialMediaAutomator:
             print(f"{platform.capitalize()} Description: {description}")
 
             page.close()
-            context.close()
 
     def close(self):
+        self.context.close()  # Close the single browser context
         self.browser.close()
         self.playwright.stop()
     # ...existing code...
