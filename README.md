@@ -76,7 +76,8 @@ Automate your social media presence across various platforms with Shitposter Age
 
 After installing, use the `shitposter` command to interact with the agent.
 
-#### Available Commands
+
+#### Available Commands in cli
 
 - **Automate Tasks**
 

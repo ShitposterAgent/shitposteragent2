@@ -2,6 +2,7 @@ from playwright.sync_api import sync_playwright
 import subprocess
 from ollama import Client
 import json
+import os  # Added import
 
 class SocialMediaAutomator:
     def __init__(self, social_media_config, ollama_config, tesseract_config, playwright_config):
@@ -66,8 +67,12 @@ class SocialMediaAutomator:
                 context.close()
                 continue
 
-            # Take screenshot
+            # Ensure directory exists
             screenshot_path = config['screenshot_path']
+            screenshot_dir = os.path.dirname(screenshot_path)
+            os.makedirs(screenshot_dir, exist_ok=True)  # Create directories if they don't exist
+
+            # Take screenshot
             page.screenshot(path=screenshot_path)
 
             # Extract text using Tesseract
