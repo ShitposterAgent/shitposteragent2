@@ -64,17 +64,79 @@ Automate your social media presence across various platforms with Shitposter Age
     playwright install
     ```
 
-## Usage
-
-1. **Run the Agent**
+5. **Install the Package**
 
     ```bash
-    python shitposter_agent.py
+    pip install .
     ```
 
-2. **Configuration**
+## Usage
 
-    Edit the `config.yaml` file to set up your social media accounts and preferences.
+### Command-Line Interface (CLI)
+
+After installing, use the `shitposter` command to interact with the agent.
+
+#### Available Commands
+
+- **Automate Tasks**
+
+    Automate a specific task.
+
+    ```bash
+    shitposter automate --task <task_name>
+    ```
+
+    Example:
+
+    ```bash
+    shitposter automate --task post_message
+    ```
+
+- **Check Status**
+
+    Check the status of the Shitposter Agent.
+
+    ```bash
+    shitposter status
+    ```
+
+- **Other Subcommands**
+
+    // ...additional subcommands...
+
+#### Help
+
+To view help information for the CLI:
+
+```bash
+shitposter --help
+```
+
+### Library Usage
+
+You can also use Shitposter Agent as a library in your Python projects.
+
+```python
+from shitposteragent2.automation import Automation
+from shitposteragent2.vision import Vision
+from shitposteragent2.nlp import NLP
+
+def perform_task():
+    automation = Automation()
+    vision = Vision()
+    nlp = NLP()
+
+    # Example task execution
+    automation.perform_click(100, 200)
+    image_path = vision.take_screenshot()
+    text = vision.extract_text(image_path)
+    processed_text = vision.analyze_with_ollama(text)
+    nlp.text_to_speech(processed_text)
+    # ... more task execution ...
+
+if __name__ == "__main__":
+    perform_task()
+```
 
 ## License
 

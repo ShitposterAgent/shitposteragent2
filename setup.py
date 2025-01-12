@@ -7,17 +7,39 @@
     Learn more under: https://pyscaffold.org/
 """
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 if __name__ == "__main__":
     try:
         setup(
-            use_scm_version={"version_scheme": "no-guess-dev"},
+            name='shitposteragent2',
+            version='0.1.0',
+            description='Automate your social media presence across various platforms.',
+            author='nathfavour',
+            author_email='116535483+nathfavour@users.noreply.github.com',
+            license='MIT',
+            keywords='automation social-media',
+            packages=find_packages(where='src'),
+            package_dir={'': 'src'},
+            include_package_data=True,
+            install_requires=[
+                'pyautogui',
+                'playwright',
+                'vosk',
+                'flite',
+                'importlib-metadata; python_version<"3.8"'
+            ],
             entry_points={
                 'console_scripts': [
-                    'shitposter=shitposteragent2.cli.main:main',
+                    'shitposter=cli.main:main',
                 ],
             },
+            classifiers=[
+                'Development Status :: 4 - Beta',
+                'Programming Language :: Python :: 3',
+                'License :: OSI Approved :: MIT License',
+            ],
+            python_requires='>=3.8',
         )
     except:  # noqa
         print(
