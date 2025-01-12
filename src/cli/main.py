@@ -1,7 +1,7 @@
 import argparse
-from shitposteragent2.automation import Automation
-from shitposteragent2.vision import Vision
-from shitposteragent2.nlp import NLP
+from automation import Automation
+from vision import Vision
+from nlp import NLP
 
 def main():
     parser = argparse.ArgumentParser(description="Shitposter Agent CLI")

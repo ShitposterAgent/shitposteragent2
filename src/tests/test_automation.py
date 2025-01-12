@@ -1,6 +1,5 @@
-
 import pytest
-from shitposteragent2.automation import Automation
+from automation import Automation
 
 def test_perform_click():
     automation = Automation()
