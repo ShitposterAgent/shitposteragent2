@@ -7,16 +7,21 @@ import os  # Added import
 import uuid  # Added import
 
 class SocialMediaAutomator:
-    async def __init__(self, social_media_config, ollama_config, tesseract_config, playwright_config):
+    def __init__(self, social_media_config, ollama_config, tesseract_config, playwright_config):
         self.social_media_config = social_media_config
         self.ollama_config = ollama_config
         self.tesseract_config = tesseract_config
         self.playwright_config = playwright_config
-        self.playwright = await async_playwright().start()  # Changed to async
+
+    @classmethod
+    async def create(cls, social_media_config, ollama_config, tesseract_config, playwright_config):
+        self.context = await self.browser.new_context()  # Initialize a single browser context asynchronously
+        return self
         self.browser = await self.connect_browser()  # Await the async method
         self.context = await self.browser.new_context()  # Initialize a single browser context asynchronously
+        return self
 
-    async def connect_browser(self):
+            browser = await self.playwright.chromium.connect_over_cdp(cdp_endpoint)  # Await the async method
         first_platform = next(iter(self.social_media_config.values()))
         if (cdp_endpoint := first_platform.cdp_endpoint):
             browser = await self.playwright.chromium.connect_over_cdp(cdp_endpoint)  # Await the async method
@@ -108,7 +113,9 @@ class SocialMediaAutomator:
             await page.close()  # Await the async method
 
     async def close(self):
+    # ...existing code...
         await self.context.close()  # Close the single browser context asynchronously
         await self.browser.close()  # Await the async method
         await self.playwright.stop()  # Await the async method
     # ...existing code...
+

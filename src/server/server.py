@@ -6,7 +6,7 @@ from typing import List, Optional
 import asyncio
 from datetime import datetime
 import os
-from automation import SocialMediaAutomator
+from automation.automation_module import Automation  # Updated import
 from vision import Vision
 from nlp import NLP
 from config_manager import ConfigManager
@@ -23,17 +23,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize components with config
-config_manager = ConfigManager(config_path=os.path.expanduser("~/shitposter.json"))
-config = config_manager.config
-vision = Vision(config.vision, config)  # Pass VisionConfig directly
-automator = SocialMediaAutomator(
-    social_media_config=config.social_media,
-    ollama_config=config.ollama,
-    tesseract_config=config.tesseract,
-    playwright_config=config.playwright
-)
-post_storage = PostStorage(config)
+# Initialize components with config asynchronously
+# Moved initialization to startup event
 
 class Post(BaseModel):
     content: str
@@ -44,14 +35,16 @@ class AnalysisRequest(BaseModel):
     text: str
     context: Optional[str] = None
 
-async def process_scheduled_posts(background_tasks: BackgroundTasks, config):
+automation = None  # Global variable to hold Automation instance
+
+async def process_scheduled_posts(config):
     """Process any pending scheduled posts"""
     while True:
         try:
             pending_posts = post_storage.get_pending_posts()
             for post in pending_posts:
                 try:
-                    automator.post_update(post['content'])
+                    await automation.social_automator.post_update(post['content'])  # Await the async method
                     post_storage.mark_post_completed(post['id'])
                 except Exception as e:
                     post_storage.mark_post_failed(post['id'], str(e))
@@ -62,8 +55,15 @@ async def process_scheduled_posts(background_tasks: BackgroundTasks, config):
 @app.on_event("startup")
 async def startup_event():
     """Start background tasks when server starts"""
-    background_tasks = BackgroundTasks()
-    background_tasks.add_task(process_scheduled_posts, config)
+    global automation
+    config_manager = ConfigManager(config_path=os.path.expanduser("~/shitposter.json"))
+    config = config_manager.config
+    post_storage = PostStorage(config)
+    vision = Vision(config.vision, config)  # Pass VisionConfig directly
+
+    automation = await Automation.create(config)  # Asynchronously create Automation instance
+
+    asyncio.create_task(process_scheduled_posts(config))  # Start background task
 
 @app.get("/status")
 async def get_status():
@@ -78,7 +78,7 @@ async def create_post(post: Post):
             post_id = post_storage.add_post(post.platform, post.content, post.schedule_time)
             return {"status": "scheduled", "post_id": post_id, "time": post.schedule_time}
         else:
-            automator.post_update(post.content)
+            await automation.social_automator.post_update(post.content)  # Await the async method
             return {"status": "posted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -105,22 +105,10 @@ async def analyze_text(request: AnalysisRequest):
 async def get_platform_status(platform: str):
     """Get status of specific platform"""
     try:
-        automator.check_platforms([platform])
+        await automation.social_automator.check_platforms([platform])  # Await the async method
         return {"status": "checked"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-import asyncio  # Added import
-from automation_module import Automation  # Ensure correct import
-
-async def main():
-    config = load_config()  # Replace with actual config loading
-    automation = Automation(config)  # Await the async constructor
-    await automation.setup()  # Await any setup methods
-
-    # Start the server
-    server = await start_server()  # Replace with actual server start
-    await server.serve_forever()
+        raise HTTPException(status_code=500, detail=str(e)}
 
 if __name__ == "__main__":
-    asyncio.run(main())  # Run the main async function
+    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)

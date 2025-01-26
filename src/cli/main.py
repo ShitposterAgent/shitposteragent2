@@ -3,14 +3,13 @@ import json
 import os
 import asyncio
 import threading
-from playwright.sync_api import sync_playwright
 from ollama import Client
 import sys
 
 # Add the src directory to Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from automation import Automation, WebScraper, SocialMediaAutomator
+from automation.automation_module import Automation  # Updated import
 from vision import Vision
 from nlp import NLP
 from config_manager import ConfigManager
@@ -19,7 +18,7 @@ async def continuous_monitoring(config):
     """Continuously monitor and process events"""
     client = Client(host=config.ollama.host)
     vision = Vision(config.vision, config)  # Pass VisionConfig directly
-    automation = Automation(config)
+    automation_instance = await Automation.create(config)
     
     while True:
         try:
@@ -33,7 +32,7 @@ async def continuous_monitoring(config):
 
             # Check social media platforms
             await asyncio.sleep(60)  # Check every minute
-            automation.social_automator.check_platforms(['whatsapp', 'twitter', 'instagram'])
+            await automation_instance.social_automator.check_platforms(['whatsapp', 'twitter', 'instagram'])  # Await the async method
         except Exception as e:
             print(f"Error in monitoring loop: {e}")
             await asyncio.sleep(5)  # Wait before retrying
@@ -48,6 +47,8 @@ async def chat_interface(config):
     print("  /post [platform] [message] - Create post")
     print("  /schedule [platform] [time] [message] - Schedule post")
     print("  /analyze [text] - Analyze text")
+    
+    automation_instance = await Automation.create(config)
     
     while True:
         try:
@@ -90,30 +91,26 @@ def cli():
 @click.option('--config', default='~/shitposter.json', help='Path to config file')
 def start(config):
     """Start the Shitposter Agent system"""
-    try:
-        config_manager = ConfigManager(config)
-        config_data = config_manager.config
-        
-        # Start server
-        start_server(config_data)
-        click.echo("Server started on http://localhost:8000")
-        
-        # Start background monitoring in a separate thread
-        def monitor():
-            asyncio.run(continuous_monitoring(config_data))
-        
-        monitoring_thread = threading.Thread(target=monitor)
-        monitoring_thread.daemon = True
-        monitoring_thread.start()
-        
-        # Start chat interface in main thread
+    async def run():
         try:
-            asyncio.run(chat_interface(config_data))
-        except KeyboardInterrupt:
-            click.echo("\nShutting down Shitposter Agent...")
-    except Exception as e:
-        click.echo(f"Error starting agent: {e}")
-        raise
+            config_manager = ConfigManager(config)
+            config_data = config_manager.config
+            
+            # Start server
+            start_server(config_data)
+            click.echo("Server started on http://localhost:8000")
+            
+            # Start background monitoring
+            await continuous_monitoring(config_data)
+            
+        except Exception as e:
+            click.echo(f"Error starting agent: {e}")
+            raise
+    
+    try:
+        asyncio.run(run())
+    except KeyboardInterrupt:
+        click.echo("\nShutting down Shitposter Agent...")
 
 @cli.command()
 def server():
@@ -129,17 +126,24 @@ def server():
 
 @cli.command()
 @click.argument('platforms', nargs=-1)
-async def check(platforms):
+def check(platforms):
     """Check status of social media platforms"""
+    async def run():
+        try:
+            config_manager = ConfigManager()
+            config = config_manager.config
+            
+            automation_instance = await Automation.create(config)  # Asynchronously create Automation instance
+            await automation_instance.social_automator.check_platforms(platforms)  # Await the async method
+            await automation_instance.close()  # Await the async method
+        except Exception as e:
+            click.echo(f"Error checking platforms: {e}")
+            raise
+    
     try:
-        config_manager = ConfigManager()
-        config = config_manager.config
-        
-        automation = Automation(config)  # Ensure Automation initializes asynchronously
-        await automation.social_automator.check_platforms(platforms)  # Await the async method
-        await automation.social_automator.close()  # Await the async method
+        asyncio.run(run())
     except Exception as e:
-        click.echo(f"Error checking platforms: {e}")
+        click.echo(f"Error: {e}")
         raise
 
 @cli.command()
@@ -178,12 +182,16 @@ def status():
             
         # Check browser connectivity
         try:
-            with sync_playwright() as p:
-                browser = p.chromium.connect_over_cdp(
-                    config.social_media["whatsapp"].cdp_endpoint
-                )
-                browser.close()
-                checks["Browser"] = "Connected"
+            import asyncio
+            from playwright.async_api import async_playwright  # Use async_playwright
+            async def check_browser():
+                async with async_playwright() as p:
+                    browser = await p.chromium.connect_over_cdp(
+                        config.social_media["whatsapp"].cdp_endpoint
+                    )
+                    await browser.close()
+            asyncio.run(check_browser())
+            checks["Browser"] = "Connected"
         except:
             pass
             

@@ -7,7 +7,7 @@ from pynput.mouse import Controller as MouseController, Button  # Import Button
 from pynput.keyboard import Controller as KeyboardController
 
 class Automation:
-    async def __init__(self, config):
+    def __init__(self, config):
         self.config = config
         self.headless = config.playwright.headless
         
@@ -20,14 +20,19 @@ class Automation:
             self.keyboard = None
             
         self.web_scraper = WebScraper(config) if config.playwright.use_cdp else None
-        self.social_automator = SocialMediaAutomator(
-            social_media_config=config.social_media,
-            ollama_config=config.ollama,
-            tesseract_config=config.tesseract,
-            playwright_config=config.playwright
-        ) if all(key in config.dict() for key in ['social_media', 'ollama', 'tesseract', 'playwright']) else None
-        if self.social_automator:
-            await self.social_automator.__init__()  # Await the async constructor
+        self.social_automator = None  # Initialize later asynchronously
+
+    @classmethod
+    async def create(cls, config):
+        self = cls(config)
+        if all(key in config.dict() for key in ['social_media', 'ollama', 'tesseract', 'playwright']):
+            self.social_automator = await SocialMediaAutomator.create(
+                social_media_config=config.social_media,
+                ollama_config=config.ollama,
+                tesseract_config=config.tesseract,
+                playwright_config=config.playwright
+            )
+        return self
 
     def perform_click(self, x, y):
         """Perform a mouse click at specified coordinates using pynput"""
@@ -63,9 +68,9 @@ class Automation:
             print(f"Key sequence failed: {e}")
             return False
 
-    def close(self):
+    async def close(self):
         """Clean up resources"""
         if self.web_scraper:
             self.web_scraper.close()
         if self.social_automator:
-            self.social_automator.close()
+            await self.social_automator.close()
