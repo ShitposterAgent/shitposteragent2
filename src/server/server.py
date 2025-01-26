@@ -10,7 +10,7 @@ from automation import SocialMediaAutomator
 from vision import Vision
 from nlp import NLP
 from config_manager import ConfigManager
-from server.storage import PostStorage
+from .storage import PostStorage
 
 app = FastAPI(title="Shitposter Agent API")
 
