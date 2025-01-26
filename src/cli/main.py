@@ -7,15 +7,15 @@ import threading
 # import pyautogui
 from playwright.sync_api import sync_playwright
 from ollama import Client
-from ..automation import SocialMediaAutomator, WebScraper, Automation
-from ..vision import Vision
-from ..nlp import NLP
-from ..config_manager import ConfigManager
+from automation.automation_module import SocialMediaAutomator, WebScraper, Automation
+from vision.vision_module import Vision
+from nlp.nlp_module import NLP  # Assuming the NLP module exists
+from config_manager import ConfigManager
 
 async def continuous_monitoring(config):
     """Continuously monitor and process events"""
     client = Client(host=config.ollama.host)
-    vision = Vision(config.ollama.dict(), config)
+    vision = Vision(config.vision.dict(), config)
     automation = Automation(config.dict())
     
     while True:
