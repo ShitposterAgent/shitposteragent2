@@ -4,3 +4,12 @@ vosk
 flite
 ollama
 pytest-playwright
+pytesseract
+pillow
+numpy
+fastapi
+uvicorn
+click
+asyncio
+pydantic
+python-multipart

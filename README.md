@@ -1,174 +1,107 @@
 # Shitposter Agent
 
-Automate your social media presence across various platforms with Shitposter Agent. Leveraging locally running Ollama agents, it intelligently manages tasks by determining whether logging in is required. For tasks needing authentication, it uses Tesseract and PyAutoGUI to interact with existing web browser sessions. For tasks that don't require logging in, Playwright handles automation such as web scraping.
+An intelligent social media automation agent that provides continuous monitoring, automated interactions, and smart content management across multiple platforms.
 
 ## Features
 
-- **Multi-Platform Automation**: Seamlessly automate actions on all major social media platforms.
-- **Intelligent Task Identification**: Automatically determines if a task requires logging in.
-- **Vision-Based Login**: Utilizes Tesseract OCR and PyAutoGUI for logging into existing browser sessions.
-- **Browser Automation**: Employs Playwright for tasks like web scraping without the need for authentication or connects to existing Chrome instances via CDP.
-- **Live Interactions**: Integrates Vosk and Flite for real-time interactions with lightweight NLP.
-
-## Dependencies
-
-### Python Libraries
-
-- `pyautogui`
-- `playwright`
-- `vosk`
-- `flite`
-
-### System Dependencies
-
-- **Tesseract OCR**: Install via system package manager.
-- **Vosk**: Install via system package manager.
-- **Flite**: Install via system package manager.
+- **Unified Command Interface**: Single `shitposter start` command to initialize both CLI and API server
+- **Continuous Monitoring**: Real-time screen monitoring and social media platform analysis
+- **Intelligent Interaction**: Uses Ollama for natural language understanding and response generation
+- **Multi-Platform Support**: Handles multiple social media platforms simultaneously
+- **Hybrid Automation**: Combines Playwright for structured web interactions and PyAutoGUI for flexible system control
+- **Interactive Chat**: Real-time chat interface with the agent while running
+- **API Control**: RESTful API server for external control and GUI integration
+- **Scheduled Posts**: Support for scheduling and managing future posts
+- **Visual Analysis**: Continuous screen monitoring and OCR capabilities
 
 ## Installation
 
-1. **Clone the Repository**
+1. **System Dependencies**
 
-    ```bash
-    git clone https://github.com/yourusername/shitposteragent.git
-    cd shitposteragent
-    ```
+```bash
+# Install Tesseract OCR
+sudo apt-get install tesseract-ocr
 
-2. **Install System Dependencies**
+# Install Ollama
+curl https://ollama.ai/install.sh | sh
+```
 
-    - **Tesseract OCR**
+2. **Python Package**
 
-        ```bash
-        sudo apt-get install tesseract-ocr
-        ```
+```bash
+pip install shitposteragent2
+```
 
-    - **Vosk**
+3. **Configuration**
 
-        Follow the installation guide at [Vosk Documentation](https://alphacephei.com/vosk/).
+Create a configuration file at `~/shitposter.json`:
 
-    - **Flite**
-
-        ```bash
-        sudo apt-get install flite
-        ```
-
-3. **Install Python Dependencies**
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4. **Install Playwright Browsers**
-
-    ```bash
-    playwright install
-    ```
-
-5. **Install the Package**
-
-    ```bash
-    pip install .
-    ```
+```json
+{
+    "social_media": {
+        "whatsapp": {
+            "url": "https://web.whatsapp.com",
+            "cdp_endpoint": "http://localhost:9222"
+        },
+        // Add other platforms...
+    },
+    "ollama": {
+        "host": "http://localhost:11434",
+        "model_general": "tinyllama"
+    }
+}
+```
 
 ## Usage
 
-### Command-Line Interface (CLI)
-
-After installing, use the `shitposter` command to interact with the agent.
-
-
-#### Available Commands in cli
-
-- **Automate Tasks**
-
-    Automate a specific task.
-
-    ```bash
-    shitposter automate --task <task_name>
-    ```
-
-    Example:
-
-    ```bash
-    shitposter automate --task post_message
-    ```
-
-- **Check Status**
-
-    Check the status of the Shitposter Agent.
-
-    ```bash
-    shitposter status
-    ```
-
-- **Other Subcommands**
-
-    // ...additional subcommands...
-
-#### Help
-
-To view help information for the CLI:
+### Starting the Agent
 
 ```bash
-shitposter --help
+shitposter start
 ```
 
-### Library Usage
+This single command:
+- Starts the API server for GUI control
+- Initializes continuous monitoring
+- Opens an interactive chat interface
 
-You can also use Shitposter Agent as a library in your Python projects.
+### Commands Available in Chat Interface
 
-```python
-from shitposteragent2.automation import WebScraper, SocialMediaAutomator
-from shitposteragent2.vision import Vision
-from shitposteragent2.nlp import NLP
+While the agent is running, you can interact with it through the chat interface:
 
-def perform_web_scraping(url, use_cdp=False, cdp_endpoint=None):
-    scraper = WebScraper(use_cdp=use_cdp, cdp_endpoint=cdp_endpoint)
-    content = scraper.scrape(url)
-    scraper.close()
-    return content
+- Type your messages to get AI-powered responses
+- Use special commands for direct control:
+  - `/status` - Check current status
+  - `/post [platform] [message]` - Create immediate post
+  - `/schedule [platform] [time] [message]` - Schedule a post
+  - `/analyze [text]` - Analyze text with AI
 
-def automate_social_media_login(url, username, password, use_cdp=False, cdp_endpoint=None):
-    automator = SocialMediaAutomator(use_cdp=use_cdp, cdp_endpoint=cdp_endpoint)
-    automator.login(url, username, password)
-    automator.close()
+### API Endpoints
 
-def perform_task():
-    automation = Automation()
-    vision = Vision()
-    nlp = NLP()
+The agent exposes a REST API at `http://localhost:8000`:
 
-    # Example task execution
-    automation.perform_click(100, 200)
-    image_path = vision.take_screenshot()
-    text = vision.extract_text(image_path)
-    processed_text = vision.analyze_with_ollama(text)
-    nlp.text_to_speech(processed_text)
-    # ... more task execution ...
+- `GET /status` - Get agent status
+- `POST /post` - Create or schedule posts
+- `POST /analyze` - Analyze text
+- `GET /platforms/{platform}/status` - Check platform status
 
-if __name__ == "__main__":
-        perform_task()
-```
+### Configuration Options
 
-### Connecting Playwright via CDP
+The `~/shitposter.json` file supports extensive configuration:
 
-To connect Playwright to an existing Chrome instance using CDP, initialize the automation classes with the `use_cdp` parameter and provide the `cdp_endpoint`.
+- Social media platform settings
+- Ollama AI model preferences
+- Monitoring intervals
+- Screenshot directories
+- OCR settings
+- Browser automation preferences
 
-```python
-from shitposteragent2.automation import WebScraper, SocialMediaAutomator
+## Development
 
-# Example CDP endpoint
-cdp_endpoint = "http://localhost:9222"
-
-# Web Scraping with CDP
-scraper = WebScraper(use_cdp=True, cdp_endpoint=cdp_endpoint)
-content = scraper.scrape("https://example.com")
-scraper.close()
-
-# Social Media Automation with CDP
-automator = SocialMediaAutomator(use_cdp=True, cdp_endpoint=cdp_endpoint)
-automator.login("https://socialmedia.com/login", "username", "password")
-automator.close()
+```bash
+git clone https://github.com/yourusername/shitposteragent2.git
+cd shitposteragent2
+pip install -e .
 ```
 
 ## License
