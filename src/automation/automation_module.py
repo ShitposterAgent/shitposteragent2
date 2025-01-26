@@ -19,7 +19,7 @@ class Automation:
             self.mouse = None
             self.keyboard = None
             
-        self.web_scraper = WebScraper(config) if config.playwright.use_cdp else None
+        self.web_scraper = None  # Initialize later asynchronously
         self.social_automator = None  # Initialize later asynchronously
 
     @classmethod
@@ -32,6 +32,10 @@ class Automation:
                 tesseract_config=config.tesseract,
                 playwright_config=config.playwright
             )
+            if config.playwright.use_cdp:
+                self.web_scraper = await WebScraper.create(config)  # Assuming WebScraper has an async create method
+            else:
+                self.web_scraper = None
         return self
 
     def perform_click(self, x, y):
@@ -53,7 +57,7 @@ class Automation:
             raise RuntimeError("Web scraper not initialized")
         
         if 'url' in task:
-            return self.web_scraper.scrape(task['url'])
+            return asyncio.create_task(self.web_scraper.scrape(task['url']))
         return None
 
     def perform_key_sequence(self, sequence):
@@ -71,6 +75,6 @@ class Automation:
     async def close(self):
         """Clean up resources"""
         if self.web_scraper:
-            self.web_scraper.close()
+            await self.web_scraper.close()
         if self.social_automator:
             await self.social_automator.close()

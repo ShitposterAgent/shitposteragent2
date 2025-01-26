@@ -12,7 +12,25 @@ from nlp import NLP
 from config_manager import ConfigManager
 from server.storage import PostStorage
 
-app = FastAPI(title="Shitposter Agent API")
+class Lifespan:
+    async def __call__(self, app: FastAPI):
+        global automation
+        config_manager = ConfigManager(config_path=os.path.expanduser("~/shitposter.json"))
+        config = config_manager.config
+        post_storage = PostStorage(config)
+        vision = Vision(config.vision, config)  # Pass VisionConfig directly
+
+        automation = await Automation.create(config)  # Asynchronously create Automation instance
+
+        asyncio.create_task(process_scheduled_posts(config))  # Start background task
+
+        try:
+            yield
+        finally:
+            if automation:
+                await automation.close()
+
+app = FastAPI(title="Shitposter Agent API", lifespan=Lifespan())
 
 # Enable CORS
 app.add_middleware(
@@ -22,9 +40,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Initialize components with config asynchronously
-# Updated to use lifespan event handlers
 
 class Post(BaseModel):
     content: str
@@ -51,25 +66,6 @@ async def process_scheduled_posts(config):
         except Exception as e:
             print(f"Error processing scheduled posts: {e}")
         await asyncio.sleep(60)  # Check every minute
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Clean up resources on shutdown"""
-    if automation:
-        await automation.close()
-
-@app.on_event("startup")
-async def startup_event():
-    """Start background tasks when server starts"""
-    global automation
-    config_manager = ConfigManager(config_path=os.path.expanduser("~/shitposter.json"))
-    config = config_manager.config
-    post_storage = PostStorage(config)
-    vision = Vision(config.vision, config)  # Pass VisionConfig directly
-
-    automation = await Automation.create(config)  # Asynchronously create Automation instance
-
-    asyncio.create_task(process_scheduled_posts(config))  # Start background task
 
 @app.get("/status")
 async def get_status():
