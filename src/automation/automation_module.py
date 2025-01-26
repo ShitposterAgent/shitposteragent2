@@ -3,19 +3,21 @@ from datetime import datetime
 from .web_scraping import WebScraper
 from .social_media import SocialMediaAutomator
 import json
+from pynput.mouse import Controller as MouseController
+from pynput.keyboard import Controller as KeyboardController
 
 class Automation:
     def __init__(self, config):
         self.config = config
         self.headless = config.playwright.headless
         
-        # Initialize pyautogui only if not in headless mode
+        # Initialize pynput controllers only if not in headless mode
         if not self.headless:
-            import pyautogui
-            self.pyautogui = pyautogui
-            self.pyautogui.FAILSAFE = True
+            self.mouse = MouseController()
+            self.keyboard = KeyboardController()
         else:
-            self.pyautogui = None
+            self.mouse = None
+            self.keyboard = None
             
         self.web_scraper = WebScraper(config) if config.playwright.use_cdp else None
         self.social_automator = SocialMediaAutomator(
@@ -26,12 +28,13 @@ class Automation:
         ) if all(key in config for key in ['social_media', 'ollama', 'tesseract', 'playwright']) else None
 
     def perform_click(self, x, y):
-        """Perform a mouse click at specified coordinates"""
+        """Perform a mouse click at specified coordinates using pynput"""
         if self.headless:
             print("Headless mode enabled. Skipping mouse click.")
             return False
         try:
-            self.pyautogui.click(x, y)
+            self.mouse.position = (x, y)
+            self.mouse.click(pynput.mouse.Button.left, 1)
             return True
         except Exception as e:
             print(f"Click failed at ({x}, {y}): {e}")
@@ -47,12 +50,12 @@ class Automation:
         return None
 
     def perform_key_sequence(self, sequence):
-        """Execute a sequence of keyboard actions"""
+        """Execute a sequence of keyboard actions using pynput"""
         if self.headless:
             print("Headless mode enabled. Skipping key sequence.")
             return False
         try:
-            self.pyautogui.write(sequence)
+            self.keyboard.type(sequence)
             return True
         except Exception as e:
             print(f"Key sequence failed: {e}")

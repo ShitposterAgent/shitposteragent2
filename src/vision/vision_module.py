@@ -2,17 +2,10 @@ import os
 from datetime import datetime
 from ollama import Client
 import warnings
-
-# Conditional imports with error handling
-try:
-    import cv2
-    import numpy as np
-    import pytesseract
-    import mss  # For screenshots without PIL dependency
-    VISION_DEPS_AVAILABLE = True
-except ImportError as e:
-    warnings.warn(f"Vision dependencies not available: {str(e)}. Some features will be disabled.")
-    VISION_DEPS_AVAILABLE = False
+import cv2
+import numpy as np
+import pytesseract
+import mss  # For screenshots without PIL dependency
 
 class Vision:
     def __init__(self, vision_config, config):

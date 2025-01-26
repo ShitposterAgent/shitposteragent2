@@ -75,7 +75,7 @@ async def chat_interface(config):
         except Exception as e:
             print(f"Error: {e}")
 
-def start_server():
+def start_server(config):
     """Start the API server in a separate process"""
     import subprocess
     server_path = os.path.join(os.path.dirname(__file__), '..', 'server', 'server.py')
@@ -102,15 +102,9 @@ def start(config):
         def monitor():
             asyncio.run(continuous_monitoring(config_data))
         
-        if not config_data.playwright.headless:
-            import pyautogui  # Conditionally import pyautogui
-            monitoring_thread = threading.Thread(target=monitor)
-            monitoring_thread.daemon = True
-            monitoring_thread.start()
-        else:
-            monitoring_thread = threading.Thread(target=monitor)
-            monitoring_thread.daemon = True
-            monitoring_thread.start()
+        monitoring_thread = threading.Thread(target=monitor)
+        monitoring_thread.daemon = True
+        monitoring_thread.start()
         
         # Start chat interface in main thread
         try:
