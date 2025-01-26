@@ -108,7 +108,7 @@ async def get_platform_status(platform: str):
         await automation.social_automator.check_platforms([platform])  # Await the async method
         return {"status": "checked"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)}
+        raise HTTPException(status_code=500, detail=str(e))  # Corrected closing parenthesis
 
 if __name__ == "__main__":
     uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
