@@ -120,8 +120,8 @@ def server():
     """Start the Shitposter Agent server and exit"""
     try:
         import subprocess  # Ensure subprocess is imported within the function
-        server_path = os.path.join(os.path.dirname(__file__), '..', 'server', 'server.py')
-        subprocess.Popen(['python', server_path])
+        server_module = "server.server"
+        subprocess.Popen(['python', '-m', server_module])
         click.echo("Server started on http://localhost:8000")
     except Exception as e:
         click.echo(f"Error starting server: {e}")
