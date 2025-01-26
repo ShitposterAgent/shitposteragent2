@@ -1,0 +1,39 @@
+{
+    "social_media": {
+        "whatsapp": {
+            "url": "https://web.whatsapp.com",
+            "cdp_endpoint": "http://localhost:9222",
+            "screenshot_dir": "/home/nathfavour/Pictures/Screenshots"
+        },
+        "instagram": {
+            "url": "https://www.instagram.com",
+            "cdp_endpoint": "http://localhost:9222",
+            "screenshot_dir": "/home/nathfavour/Pictures/Screenshots"
+        },
+        "twitter": {
+            "url": "https://twitter.com",
+            "cdp_endpoint": "http://localhost:9222",
+            "screenshot_dir": "/home/nathfavour/Pictures/Screenshots"
+        }
+    },
+    "ollama": {
+        "host": "http://localhost:11434",
+        "headers": {
+            "x-some-header": "some-value"
+        },
+        "model_general": "tinyllama",
+        "model_vision": "visionmodel",
+        "prompts": {
+            "description": "Provide a one sentence description of what is on the screen."
+        }
+    },
+    "tesseract": {
+        "executable_path": "/usr/bin/tesseract"
+    },
+    "playwright": {
+        "headless": false
+    },
+    "paths": {
+        "config_file": "~/shitposter.json"
+    }
+}

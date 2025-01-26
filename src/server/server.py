@@ -1,15 +1,16 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from pydantic import BaseModel
 from typing import List, Optional
-import json
-import os
-from datetime import datetime
 import asyncio
+from datetime import datetime
+import os
 from ..automation import SocialMediaAutomator
 from ..vision import Vision
 from ..nlp import NLP
+from ..config_manager import ConfigManager
+from .storage import PostStorage
 
 app = FastAPI(title="Shitposter Agent API")
 
@@ -22,19 +23,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load config
-config_path = os.path.expanduser('~/shitposter.json')
-with open(config_path) as f:
-    config = json.load(f)
-
 # Initialize components
-vision = Vision(config['vision'])
+config_manager = ConfigManager()
+config = config_manager.config
+vision = Vision(config.vision.dict())
 automator = SocialMediaAutomator(
-    social_media_config=config['social_media'],
-    ollama_config=config['ollama'],
-    tesseract_config=config['tesseract'],
-    playwright_config=config['playwright']
+    social_media_config=config.social_media.dict(),
+    ollama_config=config.ollama.dict(),
+    tesseract_config=config.tesseract.dict(),
+    playwright_config=config.playwright.dict()
 )
+post_storage = PostStorage()
 
 class Post(BaseModel):
     content: str
@@ -44,6 +43,27 @@ class Post(BaseModel):
 class AnalysisRequest(BaseModel):
     text: str
     context: Optional[str] = None
+
+async def process_scheduled_posts(background_tasks: BackgroundTasks):
+    """Process any pending scheduled posts"""
+    while True:
+        try:
+            pending_posts = post_storage.get_pending_posts()
+            for post in pending_posts:
+                try:
+                    automator.post_update(post['content'])
+                    post_storage.mark_post_completed(post['id'])
+                except Exception as e:
+                    post_storage.mark_post_failed(post['id'], str(e))
+        except Exception as e:
+            print(f"Error processing scheduled posts: {e}")
+        await asyncio.sleep(60)  # Check every minute
+
+@app.on_event("startup")
+async def startup_event():
+    """Start background tasks when server starts"""
+    background_tasks = BackgroundTasks()
+    background_tasks.add_task(process_scheduled_posts)
 
 @app.get("/status")
 async def get_status():
@@ -55,13 +75,20 @@ async def create_post(post: Post):
     """Schedule or immediately create a social media post"""
     try:
         if post.schedule_time:
-            # Store scheduled post
-            # Implementation needed for persistent storage
-            return {"status": "scheduled", "time": post.schedule_time}
+            post_id = post_storage.add_post(post.platform, post.content, post.schedule_time)
+            return {"status": "scheduled", "post_id": post_id, "time": post.schedule_time}
         else:
-            # Post immediately
             automator.post_update(post.content)
             return {"status": "posted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/posts/scheduled")
+async def get_scheduled_posts():
+    """Get all scheduled posts"""
+    try:
+        posts = post_storage.get_pending_posts()
+        return {"posts": posts}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -69,7 +96,7 @@ async def create_post(post: Post):
 async def analyze_text(request: AnalysisRequest):
     """Analyze text using Ollama"""
     try:
-        analysis = vision.analyze_with_ollama(request.text)
+        analysis = vision.analyze_with_ollama(request.text, context=request.context)
         return {"analysis": analysis}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

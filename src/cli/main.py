@@ -1,57 +1,71 @@
-import argparse
-from automation import Automation
-from vision import Vision
-from nlp.nlp_module import NLP
-from automation.social_media import SocialMediaAutomator
-import json
-import subprocess
-import os
 import click
+import json
+import os
 import asyncio
 import threading
+import pyautogui
+from playwright.sync_api import sync_playwright
 from ollama import Client
+from ..automation import SocialMediaAutomator, WebScraper, Automation
+from ..vision import Vision
+from ..nlp import NLP
+from ..config_manager import ConfigManager
 
 async def continuous_monitoring(config):
     """Continuously monitor and process events"""
-    client = Client(host=config['ollama']['host'])
-    vision = Vision(config['vision'])
-    social_automator = SocialMediaAutomator(
-        social_media_config=config['social_media'],
-        ollama_config=config['ollama'],
-        tesseract_config=config['tesseract'],
-        playwright_config=config['playwright']
-    )
+    client = Client(host=config.ollama.host)
+    vision = Vision(config.ollama.dict())
+    automation = Automation(config.dict())
     
     while True:
-        # Take screenshot and analyze
-        screenshot = vision.take_screenshot()
-        if screenshot:
-            text = vision.extract_text(screenshot)
-            if text:
-                analysis = vision.analyze_with_ollama(text)
-                print(f"Current screen analysis: {analysis}")
-
-        # Check social media platforms
-        await asyncio.sleep(60)  # Check every minute
         try:
-            social_automator.check_platforms(['whatsapp', 'twitter', 'instagram'])
+            # Take screenshot and analyze
+            screenshot = vision.take_screenshot()
+            if screenshot:
+                text = vision.extract_text(screenshot)
+                if text:
+                    analysis = vision.analyze_with_ollama(text)
+                    print(f"Current screen analysis: {analysis}")
+
+            # Check social media platforms
+            await asyncio.sleep(60)  # Check every minute
+            automation.social_automator.check_platforms(['whatsapp', 'twitter', 'instagram'])
         except Exception as e:
-            print(f"Error checking platforms: {e}")
+            print(f"Error in monitoring loop: {e}")
+            await asyncio.sleep(5)  # Wait before retrying
 
 async def chat_interface(config):
     """Handle user chat interactions"""
-    client = Client(host=config['ollama']['host'])
+    client = Client(host=config.ollama.host)
+    nlp = NLP(config.ollama.dict())
     print("Chat interface ready. Type your messages (Ctrl+C to exit):")
+    print("Special commands:")
+    print("  /status - Check agent status")
+    print("  /post [platform] [message] - Create post")
+    print("  /schedule [platform] [time] [message] - Schedule post")
+    print("  /analyze [text] - Analyze text")
     
     while True:
         try:
             user_input = input("> ")
             if user_input.lower() in ['exit', 'quit']:
                 break
+            
+            if user_input.startswith('/'):
+                # Handle special commands
+                command_intent = nlp.get_command_intent(user_input)
+                # Process command based on intent
+                response = f"Command received: {command_intent}"
+            else:
+                # Normal chat interaction
+                response = nlp.analyze_text(user_input)
+            
+            print(f"Agent: {response}")
+            
+            # Optional voice response
+            if config.ollama.get('voice_enabled', False):
+                nlp.text_to_speech(response)
                 
-            response = client.chat(model=config['ollama']['model_general'],
-                                 messages=[{"role": "user", "content": user_input}])
-            print(f"Agent: {response['choices'][0]['message']['content']}")
         except KeyboardInterrupt:
             break
         except Exception as e:
@@ -72,53 +86,96 @@ def cli():
 @click.option('--config', default='~/shitposter.json', help='Path to config file')
 def start(config):
     """Start the Shitposter Agent system"""
-    config_path = os.path.expanduser(config)
     try:
-        with open(config_path) as f:
-            config_data = json.load(f)
-    except FileNotFoundError:
-        click.echo(f"Config file not found at {config_path}")
-        return
+        config_manager = ConfigManager(config)
+        config_data = config_manager.config
         
-    # Start server
-    start_server()
-    click.echo("Server started")
-    
-    # Start background monitoring in a separate thread
-    monitoring_thread = threading.Thread(
-        target=lambda: asyncio.run(continuous_monitoring(config_data))
-    )
-    monitoring_thread.daemon = True
-    monitoring_thread.start()
-    
-    # Start chat interface in main thread
-    try:
-        asyncio.run(chat_interface(config_data))
-    except KeyboardInterrupt:
-        click.echo("\nShutting down Shitposter Agent...")
-    
+        # Start server
+        start_server()
+        click.echo("Server started on http://localhost:8000")
+        
+        # Start background monitoring in a separate thread
+        monitoring_thread = threading.Thread(
+            target=lambda: asyncio.run(continuous_monitoring(config_data))
+        )
+        monitoring_thread.daemon = True
+        monitoring_thread.start()
+        
+        # Start chat interface in main thread
+        try:
+            asyncio.run(chat_interface(config_data))
+        except KeyboardInterrupt:
+            click.echo("\nShutting down Shitposter Agent...")
+    except Exception as e:
+        click.echo(f"Error starting agent: {e}")
+        raise
+
 @cli.command()
 @click.argument('platforms', nargs=-1)
 def check(platforms):
     """Check status of social media platforms"""
-    config_path = os.path.expanduser('~/shitposter.json')
-    with open(config_path) as f:
-        config = json.load(f)
+    try:
+        config_manager = ConfigManager()
+        config = config_manager.config
         
-    automator = SocialMediaAutomator(
-        social_media_config=config['social_media'],
-        ollama_config=config['ollama'],
-        tesseract_config=config['tesseract'],
-        playwright_config=config['playwright']
-    )
-    automator.check_platforms(platforms)
-    automator.close()
+        automation = Automation(config.dict())
+        automation.social_automator.check_platforms(platforms)
+        automation.close()
+    except Exception as e:
+        click.echo(f"Error checking platforms: {e}")
+        raise
 
 @cli.command()
 def status():
     """Check the status of the Shitposter Agent"""
-    click.echo("Checking Shitposter Agent status...")
-    # Implement status check logic
-    
+    try:
+        config_manager = ConfigManager()
+        config = config_manager.config
+        
+        # Check components
+        checks = {
+            "Config": "OK",
+            "Ollama": "Not connected",
+            "Browser": "Not connected",
+            "Server": "Not running"
+        }
+        
+        # Check Ollama
+        try:
+            client = Client(host=config.ollama.host)
+            client.chat(model=config.ollama.model_general, 
+                       messages=[{"role": "user", "content": "test"}])
+            checks["Ollama"] = "Connected"
+        except:
+            pass
+            
+        # Check browser connectivity
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.connect_over_cdp(
+                    config.social_media["whatsapp"].cdp_endpoint
+                )
+                browser.close()
+                checks["Browser"] = "Connected"
+        except:
+            pass
+            
+        # Check if server is running
+        import requests
+        try:
+            requests.get("http://localhost:8000/status")
+            checks["Server"] = "Running"
+        except:
+            pass
+            
+        # Print status
+        click.echo("\nShitposter Agent Status:")
+        for component, status in checks.items():
+            click.echo(f"{component}: {status}")
+            
+    except Exception as e:
+        click.echo(f"Error checking status: {e}")
+        raise
+
 if __name__ == '__main__':
     cli()
