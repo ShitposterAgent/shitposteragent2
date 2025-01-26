@@ -3,7 +3,7 @@ from datetime import datetime
 from .web_scraping import WebScraper
 from .social_media import SocialMediaAutomator
 import json
-from pynput.mouse import Controller as MouseController
+from pynput.mouse import Controller as MouseController, Button  # Import Button
 from pynput.keyboard import Controller as KeyboardController
 
 class Automation:
@@ -34,7 +34,7 @@ class Automation:
             return False
         try:
             self.mouse.position = (x, y)
-            self.mouse.click(pynput.mouse.Button.left, 1)
+            self.mouse.click(Button.left, 1)  # Use Button.left
             return True
         except Exception as e:
             print(f"Click failed at ({x}, {y}): {e}")
