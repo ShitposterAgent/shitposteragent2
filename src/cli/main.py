@@ -148,9 +148,18 @@ def status():
             "Config": "OK",
             "Ollama": "Not connected",
             "Browser": "Not connected",
-            "Server": "Not running"
+            "Server": "Not running",
+            "Vision": "Not available"
         }
         
+        # Check Vision dependencies
+        try:
+            from PIL import Image
+            import pytesseract
+            checks["Vision"] = "Available"
+        except ImportError:
+            pass
+            
         # Check Ollama
         try:
             client = Client(host=config.ollama.host)
