@@ -2,7 +2,6 @@ import os
 import json
 from typing import Dict, Any
 from pydantic import BaseModel, validator
-from datetime import datetime
 
 class SocialMediaConfig(BaseModel):
     url: str
@@ -27,17 +26,23 @@ class PlaywrightConfig(BaseModel):
     headless: bool = False
     use_cdp: bool = True
 
+class PathsConfig(BaseModel):
+    config_file: str = "~/shitposter.json"
+    db_path: str = "~/.local/share/shitposter/posts.db"
+
+    @validator('*')
+    def expand_paths(cls, v):
+        return os.path.expanduser(v)
+
 class Config(BaseModel):
     social_media: Dict[str, SocialMediaConfig]
     ollama: OllamaConfig
     tesseract: TesseractConfig
     playwright: PlaywrightConfig
-    paths: Dict[str, str]
-    db_path: str  # Added db_path
+    paths: PathsConfig
 
-    @validator('db_path')
-    def set_db_path(cls, v):
-        return os.path.expanduser(v)
+    class Config:
+        arbitrary_types_allowed = True
 
 class ConfigManager:
     def __init__(self, config_path: str = "~/shitposter.json"):

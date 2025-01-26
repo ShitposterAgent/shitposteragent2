@@ -32,7 +32,7 @@
         "executable_path": "/usr/bin/tesseract"
     },
     "playwright": {
-        "headless": true,  
+        "headless": true,
         "use_cdp": true
     },
     "paths": {
