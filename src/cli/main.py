@@ -99,11 +99,6 @@ def start(config):
             target=lambda: asyncio.run(continuous_monitoring(config_data))
         )
         monitoring_thread.daemon = True
-        # Start background monitoring in a separate thread
-        monitoring_thread = threading.Thread(
-            target=lambda: asyncio.run(continuous_monitoring(config_data))
-        )
-        monitoring_thread.daemon = True
         monitoring_thread.start()
         
         # Start chat interface in main thread
@@ -165,27 +160,6 @@ def status():
         except:
             pass
             
-        # Check if server is running
-        import requests
-        try:
-            requests.get("http://localhost:8000/status")
-            checks["Server"] = "Running"
-        except:
-            pass
-            
-        # Print status
-        click.echo("\nShitposter Agent Status:")
-        for component, status in checks.items():
-            click.echo(f"{component}: {status}")
-            
-    except Exception as e:
-        click.echo(f"Error checking status: {e}")
-            
-        raise
-
-if __name__ == '__main__':
-    cli()
-
         # Check if server is running
         import requests
         try:
