@@ -24,7 +24,7 @@ app.add_middleware(
 )
 
 # Initialize components with config asynchronously
-# Moved initialization to startup event
+# Updated to use lifespan event handlers
 
 class Post(BaseModel):
     content: str
@@ -51,6 +51,12 @@ async def process_scheduled_posts(config):
         except Exception as e:
             print(f"Error processing scheduled posts: {e}")
         await asyncio.sleep(60)  # Check every minute
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up resources on shutdown"""
+    if automation:
+        await automation.close()
 
 @app.on_event("startup")
 async def startup_event():
