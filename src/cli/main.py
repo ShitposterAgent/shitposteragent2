@@ -154,7 +154,7 @@ def status():
         
         # Check Vision dependencies
         try:
-            from PIL import Image
+            import cv2
             import pytesseract
             checks["Vision"] = "Available"
         except ImportError:

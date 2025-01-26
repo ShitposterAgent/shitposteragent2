@@ -5,9 +5,8 @@ import warnings
 
 # Conditional imports with error handling
 try:
+    import cv2
     import pytesseract
-    import PIL
-    from PIL import Image
     import numpy as np
     VISION_DEPS_AVAILABLE = True
 except ImportError as e:
@@ -50,8 +49,13 @@ class Vision:
             filename = f"screenshot_{timestamp}.png"
             filepath = os.path.join(self.screenshot_dir, filename)
             
+            # Take screenshot using pyautogui
             screenshot = self.pyautogui.screenshot()
-            screenshot.save(filepath)
+            # Convert to numpy array and save using cv2
+            screenshot_np = np.array(screenshot)
+            # Convert RGB to BGR (OpenCV format)
+            screenshot_cv2 = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2BGR)
+            cv2.imwrite(filepath, screenshot_cv2)
             return filepath
         except Exception as e:
             print(f"Error taking screenshot: {e}")
@@ -64,8 +68,15 @@ class Vision:
             return None
             
         try:
-            image = Image.open(image_path)
-            text = pytesseract.image_to_string(image)
+            # Read image using OpenCV
+            image = cv2.imread(image_path)
+            # Convert to grayscale for better OCR
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            # Apply thresholding to preprocess the image
+            gray = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+            
+            # Extract text using Tesseract
+            text = pytesseract.image_to_string(gray)
             return text.strip()
         except Exception as e:
             print(f"Error extracting text: {e}")
@@ -106,15 +117,14 @@ class Vision:
             
         last_screenshot = None
         try:
-            current = self.pyautogui.screenshot(region=region)
+            # Take screenshot and convert to cv2 format
+            screen = self.pyautogui.screenshot(region=region)
+            current = cv2.cvtColor(np.array(screen), cv2.COLOR_RGB2BGR)
+            
             if last_screenshot is not None:
-                # Convert to numpy arrays for comparison
-                current_arr = np.array(current)
-                last_arr = np.array(last_screenshot)
-                
-                # Calculate difference
-                diff = np.sum(np.absolute(current_arr - last_arr))
-                if diff > 0:
+                # Calculate difference using cv2
+                diff = cv2.absdiff(current, last_screenshot)
+                if cv2.countNonZero(cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)) > 0:
                     return True, current
             
             last_screenshot = current
