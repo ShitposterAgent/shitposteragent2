@@ -1,4 +1,3 @@
-import pyautogui
 import os
 from datetime import datetime
 from .web_scraping import WebScraper
@@ -8,7 +7,16 @@ import json
 class Automation:
     def __init__(self, config):
         self.config = config
-        pyautogui.FAILSAFE = True
+        self.headless = config.playwright.headless
+        
+        # Initialize pyautogui only if not in headless mode
+        if not self.headless:
+            import pyautogui
+            self.pyautogui = pyautogui
+            self.pyautogui.FAILSAFE = True
+        else:
+            self.pyautogui = None
+            
         self.web_scraper = WebScraper(config) if config.playwright.use_cdp else None
         self.social_automator = SocialMediaAutomator(
             social_media_config=config.social_media,
@@ -19,11 +27,11 @@ class Automation:
 
     def perform_click(self, x, y):
         """Perform a mouse click at specified coordinates"""
-        if self.config.playwright.headless:
+        if self.headless:
             print("Headless mode enabled. Skipping mouse click.")
             return False
         try:
-            self.web_scraper.pyautogui.click(x, y)
+            self.pyautogui.click(x, y)
             return True
         except Exception as e:
             print(f"Click failed at ({x}, {y}): {e}")
@@ -40,11 +48,11 @@ class Automation:
 
     def perform_key_sequence(self, sequence):
         """Execute a sequence of keyboard actions"""
-        if self.config.playwright.headless:
+        if self.headless:
             print("Headless mode enabled. Skipping key sequence.")
             return False
         try:
-            self.web_scraper.pyautogui.write(sequence)
+            self.pyautogui.write(sequence)
             return True
         except Exception as e:
             print(f"Key sequence failed: {e}")

@@ -3,13 +3,16 @@ import json
 import os
 import asyncio
 import threading
-# Remove pyautogui import from the top
-# import pyautogui
 from playwright.sync_api import sync_playwright
 from ollama import Client
-from automation.automation_module import SocialMediaAutomator, WebScraper, Automation
-from vision.vision_module import Vision
-from nlp.nlp_module import NLP  # Assuming the NLP module exists
+import sys
+
+# Add the src directory to Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from automation import Automation, WebScraper, SocialMediaAutomator
+from vision import Vision
+from nlp import NLP
 from config_manager import ConfigManager
 
 async def continuous_monitoring(config):
