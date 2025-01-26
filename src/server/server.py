@@ -6,11 +6,11 @@ from typing import List, Optional
 import asyncio
 from datetime import datetime
 import os
-from ..automation import SocialMediaAutomator
-from ..vision import Vision
-from ..nlp import NLP
-from ..config_manager import ConfigManager
-from .storage import PostStorage
+from automation import SocialMediaAutomator
+from vision import Vision
+from nlp import NLP
+from config_manager import ConfigManager
+from server.storage import PostStorage
 
 app = FastAPI(title="Shitposter Agent API")
 

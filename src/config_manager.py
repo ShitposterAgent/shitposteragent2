@@ -12,12 +12,17 @@ class SocialMediaConfig(BaseModel):
     def expand_path(cls, v):
         return os.path.expanduser(v)
 
+class VisionConfig(BaseModel):
+    model: str
+    threshold: float
+
 class OllamaConfig(BaseModel):
     host: str = "http://localhost:11434"
     headers: Dict[str, str] = {}
     model_general: str = "tinyllama"
     model_vision: str = "visionmodel"
     prompts: Dict[str, str]
+    voice_enabled: bool = False
 
 class TesseractConfig(BaseModel):
     executable_path: str = "/usr/bin/tesseract"
@@ -36,6 +41,7 @@ class PathsConfig(BaseModel):
 
 class Config(BaseModel):
     social_media: Dict[str, SocialMediaConfig]
+    vision: VisionConfig  # Added vision configuration
     ollama: OllamaConfig
     tesseract: TesseractConfig
     playwright: PlaywrightConfig
@@ -75,7 +81,16 @@ class ConfigManager:
                     "url": "https://twitter.com",
                     "cdp_endpoint": "http://localhost:9222",
                     "screenshot_dir": "~/Pictures/Screenshots"
+                },
+                "instagram": {
+                    "url": "https://www.instagram.com",
+                    "cdp_endpoint": "http://localhost:9222",
+                    "screenshot_dir": "~/Pictures/Screenshots"
                 }
+            },
+            "vision": {
+                "model": "visionmodel",
+                "threshold": 0.5
             },
             "ollama": {
                 "host": "http://localhost:11434",
@@ -84,7 +99,8 @@ class ConfigManager:
                 "model_vision": "visionmodel",
                 "prompts": {
                     "description": "Provide a one sentence description of what is on the screen."
-                }
+                },
+                "voice_enabled": False
             },
             "tesseract": {
                 "executable_path": "/usr/bin/tesseract"

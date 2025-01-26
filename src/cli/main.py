@@ -18,7 +18,7 @@ from config_manager import ConfigManager
 async def continuous_monitoring(config):
     """Continuously monitor and process events"""
     client = Client(host=config.ollama.host)
-    vision = Vision(config.vision.dict(), config)
+    vision = Vision(config.vision.dict(), config)  # Ensure 'vision' exists
     automation = Automation(config.dict())
     
     while True:
