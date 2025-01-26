@@ -17,7 +17,7 @@ class SocialMediaAutomator:
 
     def connect_browser(self):
         first_platform = next(iter(self.social_media_config.values()))
-        if (cdp_endpoint := first_platform.get('cdp_endpoint')):
+        if (cdp_endpoint := first_platform.cdp_endpoint):
             browser = self.playwright.chromium.connect_over_cdp(cdp_endpoint)
         else:
             browser = self.playwright.chromium.launch(headless=self.playwright_config.get('headless', False))
