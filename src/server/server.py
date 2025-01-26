@@ -110,9 +110,17 @@ async def get_platform_status(platform: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-def start_server():
-    """Start the FastAPI server"""
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+import asyncio  # Added import
+from automation_module import Automation  # Ensure correct import
+
+async def main():
+    config = load_config()  # Replace with actual config loading
+    automation = Automation(config)  # Await the async constructor
+    await automation.setup()  # Await any setup methods
+
+    # Start the server
+    server = await start_server()  # Replace with actual server start
+    await server.serve_forever()
 
 if __name__ == "__main__":
-    start_server()
+    asyncio.run(main())  # Run the main async function

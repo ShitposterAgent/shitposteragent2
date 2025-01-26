@@ -129,15 +129,15 @@ def server():
 
 @cli.command()
 @click.argument('platforms', nargs=-1)
-def check(platforms):
+async def check(platforms):
     """Check status of social media platforms"""
     try:
         config_manager = ConfigManager()
         config = config_manager.config
         
-        automation = Automation(config)
-        automation.social_automator.check_platforms(platforms)
-        automation.close()
+        automation = Automation(config)  # Ensure Automation initializes asynchronously
+        await automation.social_automator.check_platforms(platforms)  # Await the async method
+        await automation.social_automator.close()  # Await the async method
     except Exception as e:
         click.echo(f"Error checking platforms: {e}")
         raise

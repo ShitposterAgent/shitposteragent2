@@ -7,7 +7,7 @@ from pynput.mouse import Controller as MouseController, Button  # Import Button
 from pynput.keyboard import Controller as KeyboardController
 
 class Automation:
-    def __init__(self, config):
+    async def __init__(self, config):
         self.config = config
         self.headless = config.playwright.headless
         
@@ -26,6 +26,8 @@ class Automation:
             tesseract_config=config.tesseract,
             playwright_config=config.playwright
         ) if all(key in config.dict() for key in ['social_media', 'ollama', 'tesseract', 'playwright']) else None
+        if self.social_automator:
+            await self.social_automator.__init__()  # Await the async constructor
 
     def perform_click(self, x, y):
         """Perform a mouse click at specified coordinates using pynput"""

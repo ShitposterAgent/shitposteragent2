@@ -1,4 +1,5 @@
-from playwright.sync_api import sync_playwright
+import asyncio  # Added import
+from playwright.async_api import async_playwright  # Changed import to async_playwright
 import subprocess
 from ollama import Client
 import json
@@ -6,44 +7,44 @@ import os  # Added import
 import uuid  # Added import
 
 class SocialMediaAutomator:
-    def __init__(self, social_media_config, ollama_config, tesseract_config, playwright_config):
+    async def __init__(self, social_media_config, ollama_config, tesseract_config, playwright_config):
         self.social_media_config = social_media_config
         self.ollama_config = ollama_config
         self.tesseract_config = tesseract_config
         self.playwright_config = playwright_config
-        self.playwright = sync_playwright().start()
-        self.browser = self.connect_browser()
-        self.context = self.browser.new_context()  # Initialize a single browser context
+        self.playwright = await async_playwright().start()  # Changed to async
+        self.browser = await self.connect_browser()  # Await the async method
+        self.context = await self.browser.new_context()  # Initialize a single browser context asynchronously
 
-    def connect_browser(self):
+    async def connect_browser(self):
         first_platform = next(iter(self.social_media_config.values()))
         if (cdp_endpoint := first_platform.cdp_endpoint):
-            browser = self.playwright.chromium.connect_over_cdp(cdp_endpoint)
+            browser = await self.playwright.chromium.connect_over_cdp(cdp_endpoint)  # Await the async method
         else:
-            browser = self.playwright.chromium.launch(headless=self.playwright_config.get('headless', False))
+            browser = await self.playwright.chromium.launch(headless=self.playwright_config.get('headless', False))  # Await the async method
         return browser
 
-    def login(self, url, username, password):
-        context = self.browser.new_context()
-        page = context.new_page()
-        page.goto(url)
-        page.fill('input[name="username"]', username)
-        page.fill('input[name="password"]', password)
-        page.click('button[type="submit"]')
+    async def login(self, url, username, password):
+        context = await self.browser.new_context()  # Await the async method
+        page = await context.new_page()  # Await the async method
+        await page.goto(url)  # Await the async method
+        await page.fill('input[name="username"]', username)  # Await the async method
+        await page.fill('input[name="password"]', password)  # Await the async method
+        await page.click('button[type="submit"]')  # Await the async method
         # ...existing code...
-        page.close()
-        context.close()
+        await page.close()  # Await the async method
+        await context.close()  # Await the async method
 
-    def post_update(self, content):
-        page = self.context.new_page()  # Open a new tab in the existing context
+    async def post_update(self, content):
+        page = await self.context.new_page()  # Open a new tab in the existing context asynchronously
         # ...existing code...
-        page.goto('https://socialmedia.com/post')
-        page.fill('textarea[name="post"]', content)
-        page.click('button[type="submit"]')
+        await page.goto('https://socialmedia.com/post')  # Await the async method
+        await page.fill('textarea[name="post"]', content)  # Await the async method
+        await page.click('button[type="submit"]')  # Await the async method
         # ...existing code...
-        page.close()
+        await page.close()  # Await the async method
 
-    def check_platforms(self, platforms):
+    async def check_platforms(self, platforms):
         client = Client(
             host=self.ollama_config['host'],
             headers=self.ollama_config['headers']
@@ -57,12 +58,12 @@ class SocialMediaAutomator:
                 print(f"Configuration for {platform} not found.")
                 continue
 
-            page = self.context.new_page()  # Open a new tab in the existing context
+            page = await self.context.new_page()  # Open a new tab in the existing context asynchronously
             try:
-                page.goto(config['url'], timeout=60000)  # Increased timeout to 60 seconds
+                await page.goto(config['url'], timeout=60000)  # Await the async method
             except Exception as e:
                 print(f"Error navigating to {platform}: {e}")
-                page.close()
+                await page.close()  # Await the async method
                 continue
 
             # Ensure directory exists
@@ -74,7 +75,7 @@ class SocialMediaAutomator:
             screenshot_path = os.path.join(screenshot_dir, random_filename)
 
             # Take screenshot
-            page.screenshot(path=screenshot_path)
+            await page.screenshot(path=screenshot_path)  # Await the async method
 
             # Extract text using Tesseract
             try:
@@ -104,10 +105,10 @@ class SocialMediaAutomator:
             print(f"{platform.capitalize()} Screenshot: {screenshot_path}")
             print(f"{platform.capitalize()} Description: {description}")
 
-            page.close()
+            await page.close()  # Await the async method
 
-    def close(self):
-        self.context.close()  # Close the single browser context
-        self.browser.close()
-        self.playwright.stop()
+    async def close(self):
+        await self.context.close()  # Close the single browser context asynchronously
+        await self.browser.close()  # Await the async method
+        await self.playwright.stop()  # Await the async method
     # ...existing code...
