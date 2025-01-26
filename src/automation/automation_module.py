@@ -9,14 +9,18 @@ class Automation:
     def __init__(self, config):
         self.config = config
         pyautogui.FAILSAFE = True
-        self.web_scraper = None
-        self.social_automator = None
-        self.setup_automators()
+        self.web_scraper = WebScraper(config) if 'playwright' in config else None
+        self.social_automator = SocialMediaAutomator(
+            social_media_config=config.social_media,
+            ollama_config=config.ollama,
+            tesseract_config=config.tesseract,
+            playwright_config=config.playwright
+        ) if all(key in config for key in ['social_media', 'ollama', 'tesseract', 'playwright']) else None
 
-    def setup_automators(self):
-        """Initialize automation components based on config"""
+    def perform_click(self, x, y):
+        """Perform a mouse click at specified coordinates"""
         if 'playwright' in self.config:
-            self.web_scraper = WebScraper(
+            pyautogui.click(x, y)
                 use_cdp=self.config['playwright'].get('use_cdp', False),
                 cdp_endpoint=self.config['playwright'].get('cdp_endpoint')
             )
@@ -55,19 +59,6 @@ class Automation:
         except Exception as e:
             print(f"Key sequence failed: {e}")
             return False
-
-    def drag_mouse(self, start_x, start_y, end_x, end_y, duration=0.5):
-        """Perform mouse drag operation"""
-        try:
-            pyautogui.moveTo(start_x, start_y)
-            pyautogui.dragTo(end_x, end_y, duration=duration)
-            return True
-        except Exception as e:
-            print(f"Mouse drag failed: {e}")
-            return False
-
-    def close(self):
-        """Clean up resources"""
         if self.web_scraper:
             self.web_scraper.close()
         if self.social_automator:

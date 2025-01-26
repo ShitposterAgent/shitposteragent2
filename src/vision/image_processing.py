@@ -1,7 +1,7 @@
 class ImageProcessor:
-    def __init__(self):
-        # Initialize image processing resources, e.g., OpenCV
-        pass
+    def __init__(self, config):
+        self.use_cdp = config.playwright.use_cdp
+        self.cdp_endpoint = config.social_media.whatsapp.cdp_endpoint
 
     def preprocess_image(self, image_path):
         # Implement image preprocessing steps

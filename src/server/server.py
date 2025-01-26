@@ -23,17 +23,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize components
-config_manager = ConfigManager()
+# Initialize components with config
+config_manager = ConfigManager(config_path=config_config_path)
 config = config_manager.config
-vision = Vision(config.vision.dict())
+vision = Vision(config.vision.dict(), config)
 automator = SocialMediaAutomator(
     social_media_config=config.social_media.dict(),
     ollama_config=config.ollama.dict(),
     tesseract_config=config.tesseract.dict(),
     playwright_config=config.playwright.dict()
 )
-post_storage = PostStorage()
+post_storage = PostStorage(config)
 
 class Post(BaseModel):
     content: str

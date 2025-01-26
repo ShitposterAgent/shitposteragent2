@@ -4,8 +4,9 @@ from datetime import datetime
 from typing import List, Dict, Any
 
 class PostStorage:
-    def __init__(self, db_path="~/.local/share/shitposter/posts.db"):
-        self.db_path = os.path.expanduser(db_path)
+    def __init__(self, config, db_path=None):
+        self.db_path = db_path or config.paths.db_path
+        self.db_path = os.path.expanduser(self.db_path)
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         self.init_db()
 

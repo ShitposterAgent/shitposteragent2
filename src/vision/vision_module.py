@@ -7,10 +7,10 @@ from PIL import Image
 import numpy as np
 
 class Vision:
-    def __init__(self, vision_config):
+    def __init__(self, vision_config, config):
         self.vision_config = vision_config
-        self.ollama_client = Client(host="http://localhost:11434")
-        self.screenshot_dir = os.path.expanduser("~/Pictures/Screenshots")
+        self.ollama_client = Client(host=config.ollama.host)
+        self.screenshot_dir = config.social_media.whatsapp.screenshot_dir
         os.makedirs(self.screenshot_dir, exist_ok=True)
 
     def take_screenshot(self):

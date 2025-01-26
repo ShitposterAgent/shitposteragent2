@@ -25,7 +25,8 @@
         "model_vision": "visionmodel",
         "prompts": {
             "description": "Provide a one sentence description of what is on the screen."
-        }
+        },
+        "voice_enabled": false
     },
     "tesseract": {
         "executable_path": "/usr/bin/tesseract"
@@ -34,6 +35,7 @@
         "headless": false
     },
     "paths": {
-        "config_file": "~/shitposter.json"
+        "config_file": "~/shitposter.json",
+        "db_path": "~/.local/share/shitposter/posts.db"
     }
 }

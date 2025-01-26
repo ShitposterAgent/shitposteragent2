@@ -33,6 +33,11 @@ class Config(BaseModel):
     tesseract: TesseractConfig
     playwright: PlaywrightConfig
     paths: Dict[str, str]
+    db_path: str  # Added db_path
+
+    @validator('db_path')
+    def set_db_path(cls, v):
+        return os.path.expanduser(v)
 
 class ConfigManager:
     def __init__(self, config_path: str = "~/shitposter.json"):
@@ -84,7 +89,8 @@ class ConfigManager:
                 "use_cdp": True
             },
             "paths": {
-                "config_file": "~/shitposter.json"
+                "config_file": "~/shitposter.json",
+                "db_path": "~/.local/share/shitposter/posts.db"
             }
         }
 
@@ -106,6 +112,12 @@ class ConfigManager:
 
     def _deep_update(self, d: dict, u: dict):
         """Recursively update nested dictionary"""
+        """Recursively update nested dictionary"""
+        for k, v in u.items():
+            if isinstance(v, dict) and k in d and isinstance(d[k], dict):
+                self._deep_update(d[k], v)
+            else:
+                d[k] = v
         for k, v in u.items():
             if isinstance(v, dict) and k in d and isinstance(d[k], dict):
                 self._deep_update(d[k], v)
