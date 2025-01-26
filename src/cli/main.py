@@ -116,6 +116,18 @@ def start(config):
         raise
 
 @cli.command()
+def server():
+    """Start the Shitposter Agent server and exit"""
+    try:
+        import subprocess  # Ensure subprocess is imported within the function
+        server_path = os.path.join(os.path.dirname(__file__), '..', 'server', 'server.py')
+        subprocess.Popen(['python', server_path])
+        click.echo("Server started on http://localhost:8000")
+    except Exception as e:
+        click.echo(f"Error starting server: {e}")
+        raise
+
+@cli.command()
 @click.argument('platforms', nargs=-1)
 def check(platforms):
     """Check status of social media platforms"""
