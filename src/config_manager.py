@@ -112,12 +112,6 @@ class ConfigManager:
 
     def _deep_update(self, d: dict, u: dict):
         """Recursively update nested dictionary"""
-        """Recursively update nested dictionary"""
-        for k, v in u.items():
-            if isinstance(v, dict) and k in d and isinstance(d[k], dict):
-                self._deep_update(d[k], v)
-            else:
-                d[k] = v
         for k, v in u.items():
             if isinstance(v, dict) and k in d and isinstance(d[k], dict):
                 self._deep_update(d[k], v)

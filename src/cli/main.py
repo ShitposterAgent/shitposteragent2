@@ -3,7 +3,8 @@ import json
 import os
 import asyncio
 import threading
-import pyautogui
+# Remove pyautogui import from the top
+# import pyautogui
 from playwright.sync_api import sync_playwright
 from ollama import Client
 from ..automation import SocialMediaAutomator, WebScraper, Automation
@@ -14,7 +15,7 @@ from ..config_manager import ConfigManager
 async def continuous_monitoring(config):
     """Continuously monitor and process events"""
     client = Client(host=config.ollama.host)
-    vision = Vision(config.ollama.dict())
+    vision = Vision(config.ollama.dict(), config)
     automation = Automation(config.dict())
     
     while True:
@@ -95,11 +96,18 @@ def start(config):
         click.echo("Server started on http://localhost:8000")
         
         # Start background monitoring in a separate thread
-        monitoring_thread = threading.Thread(
-            target=lambda: asyncio.run(continuous_monitoring(config_data))
-        )
-        monitoring_thread.daemon = True
-        monitoring_thread.start()
+        def monitor():
+            asyncio.run(continuous_monitoring(config_data))
+        
+        if not config_data.playwright.headless:
+            import pyautogui  # Conditionally import pyautogui
+            monitoring_thread = threading.Thread(target=monitor)
+            monitoring_thread.daemon = True
+            monitoring_thread.start()
+        else:
+            monitoring_thread = threading.Thread(target=monitor)
+            monitoring_thread.daemon = True
+            monitoring_thread.start()
         
         # Start chat interface in main thread
         try:

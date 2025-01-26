@@ -32,7 +32,8 @@
         "executable_path": "/usr/bin/tesseract"
     },
     "playwright": {
-        "headless": false
+        "headless": true,  // Set to true to enable headless mode
+        "use_cdp": true
     },
     "paths": {
         "config_file": "~/shitposter.json",

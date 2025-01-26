@@ -9,7 +9,7 @@ class Automation:
     def __init__(self, config):
         self.config = config
         pyautogui.FAILSAFE = True
-        self.web_scraper = WebScraper(config) if 'playwright' in config else None
+        self.web_scraper = WebScraper(config) if config.playwright.use_cdp else None
         self.social_automator = SocialMediaAutomator(
             social_media_config=config.social_media,
             ollama_config=config.ollama,
@@ -19,24 +19,11 @@ class Automation:
 
     def perform_click(self, x, y):
         """Perform a mouse click at specified coordinates"""
-        if 'playwright' in self.config:
-            pyautogui.click(x, y)
-                use_cdp=self.config['playwright'].get('use_cdp', False),
-                cdp_endpoint=self.config['playwright'].get('cdp_endpoint')
-            )
-            
-        if all(key in self.config for key in ['social_media', 'ollama', 'tesseract', 'playwright']):
-            self.social_automator = SocialMediaAutomator(
-                social_media_config=self.config['social_media'],
-                ollama_config=self.config['ollama'],
-                tesseract_config=self.config['tesseract'],
-                playwright_config=self.config['playwright']
-            )
-
-    def perform_click(self, x, y):
-        """Perform a mouse click at specified coordinates"""
+        if self.config.playwright.headless:
+            print("Headless mode enabled. Skipping mouse click.")
+            return False
         try:
-            pyautogui.click(x, y)
+            self.web_scraper.pyautogui.click(x, y)
             return True
         except Exception as e:
             print(f"Click failed at ({x}, {y}): {e}")
@@ -53,12 +40,18 @@ class Automation:
 
     def perform_key_sequence(self, sequence):
         """Execute a sequence of keyboard actions"""
+        if self.config.playwright.headless:
+            print("Headless mode enabled. Skipping key sequence.")
+            return False
         try:
-            pyautogui.write(sequence)
+            self.web_scraper.pyautogui.write(sequence)
             return True
         except Exception as e:
             print(f"Key sequence failed: {e}")
             return False
+
+    def close(self):
+        """Clean up resources"""
         if self.web_scraper:
             self.web_scraper.close()
         if self.social_automator:

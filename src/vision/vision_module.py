@@ -1,4 +1,3 @@
-import pyautogui
 import os
 from datetime import datetime
 from ollama import Client
@@ -12,15 +11,24 @@ class Vision:
         self.ollama_client = Client(host=config.ollama.host)
         self.screenshot_dir = config.social_media.whatsapp.screenshot_dir
         os.makedirs(self.screenshot_dir, exist_ok=True)
+        self.headless = config.playwright.headless
+        if not self.headless:
+            import pyautogui  # Conditionally import pyautogui
+            self.pyautogui = pyautogui
+        else:
+            self.pyautogui = None
 
     def take_screenshot(self):
         """Take a screenshot and save it"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"screenshot_{timestamp}.png"
-        filepath = os.path.join(self.screenshot_dir, filename)
-        
+        if self.headless:
+            print("Headless mode enabled. Skipping screenshot.")
+            return None
         try:
-            screenshot = pyautogui.screenshot()
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"screenshot_{timestamp}.png"
+            filepath = os.path.join(self.screenshot_dir, filename)
+            
+            screenshot = self.pyautogui.screenshot()
             screenshot.save(filepath)
             return filepath
         except Exception as e:
@@ -66,10 +74,13 @@ class Vision:
 
     def monitor_screen_changes(self, region=None):
         """Monitor screen for changes in specific region"""
+        if self.headless:
+            print("Headless mode enabled. Skipping screen monitoring.")
+            return False, None
         last_screenshot = None
         
         try:
-            current = pyautogui.screenshot(region=region)
+            current = self.pyautogui.screenshot(region=region)
             if last_screenshot is not None:
                 # Convert to numpy arrays for comparison
                 current_arr = np.array(current)

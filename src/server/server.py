@@ -24,14 +24,14 @@ app.add_middleware(
 )
 
 # Initialize components with config
-config_manager = ConfigManager(config_path=config_config_path)
+config_manager = ConfigManager(config_path=os.path.expanduser("~/shitposter.json"))
 config = config_manager.config
 vision = Vision(config.vision.dict(), config)
 automator = SocialMediaAutomator(
-    social_media_config=config.social_media.dict(),
-    ollama_config=config.ollama.dict(),
-    tesseract_config=config.tesseract.dict(),
-    playwright_config=config.playwright.dict()
+    social_media_config=config.social_media,
+    ollama_config=config.ollama,
+    tesseract_config=config.tesseract,
+    playwright_config=config.playwright
 )
 post_storage = PostStorage(config)
 
@@ -44,7 +44,7 @@ class AnalysisRequest(BaseModel):
     text: str
     context: Optional[str] = None
 
-async def process_scheduled_posts(background_tasks: BackgroundTasks):
+async def process_scheduled_posts(background_tasks: BackgroundTasks, config):
     """Process any pending scheduled posts"""
     while True:
         try:
@@ -63,7 +63,7 @@ async def process_scheduled_posts(background_tasks: BackgroundTasks):
 async def startup_event():
     """Start background tasks when server starts"""
     background_tasks = BackgroundTasks()
-    background_tasks.add_task(process_scheduled_posts)
+    background_tasks.add_task(process_scheduled_posts, config)
 
 @app.get("/status")
 async def get_status():
