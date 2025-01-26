@@ -6,8 +6,9 @@ import warnings
 # Conditional imports with error handling
 try:
     import cv2
-    import pytesseract
     import numpy as np
+    import pytesseract
+    import mss  # For screenshots without PIL dependency
     VISION_DEPS_AVAILABLE = True
 except ImportError as e:
     warnings.warn(f"Vision dependencies not available: {str(e)}. Some features will be disabled.")
@@ -21,26 +22,22 @@ class Vision:
         os.makedirs(self.screenshot_dir, exist_ok=True)
         self.headless = config.playwright.headless
         
-        # Check dependencies
-        if not VISION_DEPS_AVAILABLE:
-            warnings.warn("Vision features disabled due to missing dependencies.")
-        
+        # Initialize screen capture
         if not self.headless:
             try:
-                import pyautogui
-                self.pyautogui = pyautogui
-            except ImportError:
-                warnings.warn("pyautogui not available. Screenshot features will be disabled.")
-                self.pyautogui = None
+                self.sct = mss.mss()
+            except Exception:
+                warnings.warn("Screen capture functionality not available.")
+                self.sct = None
         else:
-            self.pyautogui = None
+            self.sct = None
 
     def take_screenshot(self):
-        """Take a screenshot and save it"""
+        """Take a screenshot using mss instead of PIL"""
         if self.headless:
             print("Headless mode enabled. Skipping screenshot.")
             return None
-        if not self.pyautogui or not VISION_DEPS_AVAILABLE:
+        if not self.sct or not VISION_DEPS_AVAILABLE:
             print("Screenshot functionality not available.")
             return None
             
@@ -49,13 +46,15 @@ class Vision:
             filename = f"screenshot_{timestamp}.png"
             filepath = os.path.join(self.screenshot_dir, filename)
             
-            # Take screenshot using pyautogui
-            screenshot = self.pyautogui.screenshot()
+            # Capture entire screen
+            monitor = self.sct.monitors[0]
+            screenshot = self.sct.grab(monitor)
+            
             # Convert to numpy array and save using cv2
-            screenshot_np = np.array(screenshot)
-            # Convert RGB to BGR (OpenCV format)
-            screenshot_cv2 = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2BGR)
-            cv2.imwrite(filepath, screenshot_cv2)
+            img = np.array(screenshot)
+            # Convert BGRA to BGR
+            img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+            cv2.imwrite(filepath, img)
             return filepath
         except Exception as e:
             print(f"Error taking screenshot: {e}")
@@ -111,15 +110,15 @@ class Vision:
         if self.headless:
             print("Headless mode enabled. Skipping screen monitoring.")
             return False, None
-        if not self.pyautogui or not VISION_DEPS_AVAILABLE:
+        if not self.sct or not VISION_DEPS_AVAILABLE:
             print("Screen monitoring functionality not available.")
             return False, None
             
         last_screenshot = None
         try:
             # Take screenshot and convert to cv2 format
-            screen = self.pyautogui.screenshot(region=region)
-            current = cv2.cvtColor(np.array(screen), cv2.COLOR_RGB2BGR)
+            screen = self.sct.grab(region)
+            current = cv2.cvtColor(np.array(screen), cv2.COLOR_BGRA2BGR)
             
             if last_screenshot is not None:
                 # Calculate difference using cv2
