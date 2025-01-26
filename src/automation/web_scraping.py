@@ -2,8 +2,8 @@ from playwright.sync_api import sync_playwright
 
 class WebScraper:
     def __init__(self, config):
-        self.use_cdp = config.playwright.use_cdp
-        self.cdp_endpoint = config.social_media.whatsapp.cdp_endpoint
+        self.use_cdp = config.playwright.use_cdp  # Fetch from config
+        self.cdp_endpoint = config.social_media["whatsapp"].cdp_endpoint  # Fetch via config
         self.playwright = sync_playwright().start()
         self.browser = self.connect_browser()
 

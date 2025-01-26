@@ -11,7 +11,7 @@ class Vision:
     def __init__(self, vision_config, config):
         self.vision_config = vision_config
         self.ollama_client = Client(host=config.ollama.host)
-        self.screenshot_dir = config.social_media.whatsapp.screenshot_dir
+        self.screenshot_dir = config.social_media["whatsapp"].screenshot_dir  # Access via config
         os.makedirs(self.screenshot_dir, exist_ok=True)
         self.headless = config.playwright.headless
         
@@ -30,7 +30,7 @@ class Vision:
         if self.headless:
             print("Headless mode enabled. Skipping screenshot.")
             return None
-        if not self.sct or not VISION_DEPS_AVAILABLE:
+        if not self.sct or not self.vision_config.threshold:  # Replace VISION_DEPS_AVAILABLE
             print("Screenshot functionality not available.")
             return None
             
@@ -55,7 +55,7 @@ class Vision:
 
     def extract_text(self, image_path):
         """Extract text from image using OCR"""
-        if not VISION_DEPS_AVAILABLE:
+        if not self.vision_config.threshold:  # Replace VISION_DEPS_AVAILABLE
             print("OCR functionality not available.")
             return None
             
@@ -86,7 +86,7 @@ class Vision:
             prompt = prompts.get(context, prompts["general"])
             
             response = self.ollama_client.chat(
-                model=self.vision_config.get('model', 'tinyllama'),
+                model=self.vision_config.model,  # Fetch model from config
                 messages=[{
                     "role": "user",
                     "content": f"{prompt}\n{text}"
@@ -103,7 +103,7 @@ class Vision:
         if self.headless:
             print("Headless mode enabled. Skipping screen monitoring.")
             return False, None
-        if not self.sct or not VISION_DEPS_AVAILABLE:
+        if not self.sct or not self.vision_config.threshold:  # Replace VISION_DEPS_AVAILABLE
             print("Screen monitoring functionality not available.")
             return False, None
             

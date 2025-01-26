@@ -3,8 +3,8 @@ import numpy as np
 
 class ImageProcessor:
     def __init__(self, config):
-        self.use_cdp = config.playwright.use_cdp
-        self.cdp_endpoint = config.social_media.whatsapp.cdp_endpoint
+        self.use_cdp = config.playwright.use_cdp  # Fetch from config
+        self.cdp_endpoint = config.social_media["whatsapp"].cdp_endpoint  # Fetch via config
 
     def preprocess_image(self, image_path):
         """Implement image preprocessing steps using OpenCV"""

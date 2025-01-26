@@ -6,7 +6,7 @@ from pydantic import BaseModel, validator
 class SocialMediaConfig(BaseModel):
     url: str
     cdp_endpoint: str
-    screenshot_dir: str = "~/Pictures/Screenshots"
+    screenshot_dir: str
 
     @validator('screenshot_dir')
     def expand_path(cls, v):
@@ -17,23 +17,23 @@ class VisionConfig(BaseModel):
     threshold: float
 
 class OllamaConfig(BaseModel):
-    host: str = "http://localhost:11434"
-    headers: Dict[str, str] = {}
-    model_general: str = "tinyllama"
-    model_vision: str = "visionmodel"
+    host: str
+    headers: Dict[str, str]
+    model_general: str
+    model_vision: str
     prompts: Dict[str, str]
-    voice_enabled: bool = False
+    voice_enabled: bool
 
 class TesseractConfig(BaseModel):
-    executable_path: str = "/usr/bin/tesseract"
+    executable_path: str
 
 class PlaywrightConfig(BaseModel):
-    headless: bool = False
-    use_cdp: bool = True
+    headless: bool
+    use_cdp: bool
 
 class PathsConfig(BaseModel):
-    config_file: str = "~/shitposter.json"
-    db_path: str = "~/.local/share/shitposter/posts.db"
+    config_file: str
+    db_path: str
 
     @validator('*')
     def expand_paths(cls, v):
@@ -41,7 +41,7 @@ class PathsConfig(BaseModel):
 
 class Config(BaseModel):
     social_media: Dict[str, SocialMediaConfig]
-    vision: VisionConfig  # Added vision configuration
+    vision: VisionConfig
     ollama: OllamaConfig
     tesseract: TesseractConfig
     playwright: PlaywrightConfig
@@ -94,7 +94,9 @@ class ConfigManager:
             },
             "ollama": {
                 "host": "http://localhost:11434",
-                "headers": {},
+                "headers": {
+                    "x-some-header": "some-value"
+                },
                 "model_general": "tinyllama",
                 "model_vision": "visionmodel",
                 "prompts": {

@@ -25,7 +25,7 @@ class Automation:
             ollama_config=config.ollama,
             tesseract_config=config.tesseract,
             playwright_config=config.playwright
-        ) if all(key in config for key in ['social_media', 'ollama', 'tesseract', 'playwright']) else None
+        ) if all(key in config.dict() for key in ['social_media', 'ollama', 'tesseract', 'playwright']) else None
 
     def perform_click(self, x, y):
         """Perform a mouse click at specified coordinates using pynput"""

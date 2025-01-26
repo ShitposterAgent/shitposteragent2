@@ -18,8 +18,8 @@ from config_manager import ConfigManager
 async def continuous_monitoring(config):
     """Continuously monitor and process events"""
     client = Client(host=config.ollama.host)
-    vision = Vision(config.vision.dict(), config)  # Ensure 'vision' exists
-    automation = Automation(config.dict())
+    vision = Vision(config.vision, config)  # Pass VisionConfig directly
+    automation = Automation(config)
     
     while True:
         try:
@@ -41,7 +41,7 @@ async def continuous_monitoring(config):
 async def chat_interface(config):
     """Handle user chat interactions"""
     client = Client(host=config.ollama.host)
-    nlp = NLP(config.ollama.dict())
+    nlp = NLP(config.ollama)
     print("Chat interface ready. Type your messages (Ctrl+C to exit):")
     print("Special commands:")
     print("  /status - Check agent status")
@@ -67,7 +67,7 @@ async def chat_interface(config):
             print(f"Agent: {response}")
             
             # Optional voice response
-            if config.ollama.get('voice_enabled', False):
+            if config.ollama.voice_enabled:
                 nlp.text_to_speech(response)
                 
         except KeyboardInterrupt:
@@ -123,7 +123,7 @@ def check(platforms):
         config_manager = ConfigManager()
         config = config_manager.config
         
-        automation = Automation(config.dict())
+        automation = Automation(config)
         automation.social_automator.check_platforms(platforms)
         automation.close()
     except Exception as e:

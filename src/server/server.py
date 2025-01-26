@@ -26,7 +26,7 @@ app.add_middleware(
 # Initialize components with config
 config_manager = ConfigManager(config_path=os.path.expanduser("~/shitposter.json"))
 config = config_manager.config
-vision = Vision(config.vision.dict(), config)
+vision = Vision(config.vision, config)  # Pass VisionConfig directly
 automator = SocialMediaAutomator(
     social_media_config=config.social_media,
     ollama_config=config.ollama,
