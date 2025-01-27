@@ -33,7 +33,7 @@ class Automation:
                 playwright_config=config.playwright
             )
             if config.playwright.use_cdp:
-                self.web_scraper = await WebScraper.create(config)  # Assuming WebScraper has an async create method
+                self.web_scraper = await WebScraper.create(config)  # Using the new async create method
             else:
                 self.web_scraper = None
         return self

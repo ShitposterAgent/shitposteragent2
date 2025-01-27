@@ -12,10 +12,17 @@ class WebScraper:
         self.use_cdp = config.playwright.use_cdp  # Fetch from config
         self.cdp_endpoint = config.social_media["whatsapp"].cdp_endpoint  # Fetch via config
 
+    @classmethod
+    async def create(cls, config):
+        """Asynchronously create a WebScraper instance"""
+        instance = cls(config)
+        # Initialize any asynchronous resources here if needed
+        return instance
+
     async def scrape(self, url):
         """Asynchronously scrape the given URL"""
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=self.config.playwright.headless)
+            browser = await p.chromium.launch(headless(self.config.playwright.headless))
             context = await browser.new_context()
             page = await context.new_page()
             await page.goto(url)
@@ -25,6 +32,6 @@ class WebScraper:
             await browser.close()
             return content
 
-    def close(self):
+    async def close(self):
         """Close any persistent resources if necessary"""
         # ...existing code...

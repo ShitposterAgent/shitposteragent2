@@ -1,8 +1,8 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
 import asyncio
 from datetime import datetime
 import os
@@ -12,25 +12,7 @@ from nlp import NLP
 from config_manager import ConfigManager
 from server.storage import PostStorage
 
-class Lifespan:
-    async def __call__(self, app: FastAPI):
-        global automation
-        config_manager = ConfigManager(config_path=os.path.expanduser("~/shitposter.json"))
-        config = config_manager.config
-        post_storage = PostStorage(config)
-        vision = Vision(config.vision, config)  # Pass VisionConfig directly
-
-        automation = await Automation.create(config)  # Asynchronously create Automation instance
-
-        asyncio.create_task(process_scheduled_posts(config))  # Start background task
-
-        try:
-            yield
-        finally:
-            if automation:
-                await automation.close()
-
-app = FastAPI(title="Shitposter Agent API", lifespan=Lifespan())
+app = FastAPI(title="Shitposter Agent API", lifespan=lambda app: lifespan(app))  # Updated lifespan
 
 # Enable CORS
 app.add_middleware(
@@ -52,7 +34,7 @@ class AnalysisRequest(BaseModel):
 
 automation = None  # Global variable to hold Automation instance
 
-async def process_scheduled_posts(config):
+async def process_scheduled_posts(config, post_storage):
     """Process any pending scheduled posts"""
     while True:
         try:
@@ -66,6 +48,24 @@ async def process_scheduled_posts(config):
         except Exception as e:
             print(f"Error processing scheduled posts: {e}")
         await asyncio.sleep(60)  # Check every minute
+
+async def lifespan(app: FastAPI):
+    """Lifespan event handler"""
+    global automation
+    config_manager = ConfigManager(config_path=os.path.expanduser("~/shitposter.json"))
+    config = config_manager.config
+    post_storage = PostStorage(config)
+    vision = Vision(config.vision, config)  # Pass VisionConfig directly
+
+    automation = await Automation.create(config)  # Asynchronously create Automation instance
+
+    asyncio.create_task(process_scheduled_posts(config, post_storage))  # Start background task
+
+    try:
+        yield
+    finally:
+        if automation:
+            await automation.close()
 
 @app.get("/status")
 async def get_status():
